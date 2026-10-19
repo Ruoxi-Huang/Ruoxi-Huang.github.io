@@ -1,0 +1,399 @@
+---
+import Base from "../../layouts/Base.astro";
+import Bi from "../../components/Bi.astro";
+import Shot from "../../components/Shot.astro";
+
+const base = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/`;
+const diagramZh = `${base}diagrams/p3_cne6_covariance_flow.svg`;
+const diagramEn = `${base}diagrams/p3_cne6_covariance_flow_en.svg`;
+const p1 = `${base}projects/p1-platform/`;
+const p2 = `${base}projects/p2-dynamic-blend/`;
+
+const diagnosticRows = [
+  { zh: "估计窗口", en: "Estimation window", v: "400 个交易日" },
+  { zh: "截面股票数", en: "Cross-sectional assets", v: "193" },
+  { zh: "风险因子列", en: "Risk-factor columns", v: "90" },
+  { zh: "因子波动率状态乘子 VRA", en: "Factor VRA multiplier", v: "0.9662" },
+  { zh: "特异波动率状态乘子 VRA", en: "Specific VRA multiplier", v: "0.9024" },
+  { zh: "特异波动率中位数 / P95", en: "Specific volatility median / P95", v: "1.51% / 2.18%" },
+  { zh: "因子协方差最小特征值", en: "Minimum factor-covariance eigenvalue", v: "2.02e-06" },
+  { zh: "因子协方差迹", en: "Factor-covariance trace", v: "6.3169" },
+];
+
+const calibrationRows = [
+  { zh: "校准期数", en: "Calibration periods", v: "125" },
+  { zh: "平均预测年化 TE", en: "Mean predicted annualised TE", v: "14.48%" },
+  { zh: "平均实现年化 TE", en: "Mean realised annualised TE", v: "6.29%" },
+  { zh: "实现 / 预测", en: "Realised / predicted", v: "0.436" },
+  { zh: "预测与实现相关", en: "Prediction-realisation correlation", v: "0.269", hl: true },
+  { zh: "回归斜率", en: "Regression slope", v: "0.434" },
+  { zh: "平均绝对误差", en: "Mean absolute error", v: "8.19 pp" },
+];
+
+const features = [
+  {
+    n: "01",
+    zh: "暴露生产",
+    en: "Exposure production",
+    dzh: "市值加权截面 WLS 估计因子收益；EW 时间权重；MAD 去极值后 z-score；MidCap 处理市值非线性；CAPM 回归给出 BETA / HALPHA / HSIGMA。",
+    den: "Cap-weighted cross-sectional WLS estimates factor returns; EW time weights; MAD winsorisation then z-scores; a MidCap term absorbs the size nonlinearity; CAPM regressions produce BETA, HALPHA and HSIGMA.",
+  },
+  {
+    n: "02",
+    zh: "因子协方差左线",
+    en: "Factor-covariance line",
+    dzh: "因子收益 → EW → Newey-West → 特征值调整 ERA → 波动率状态调整 VRA → Σ_F，按研报图 1 的顺序执行。",
+    den: "Factor returns → EW → Newey-West → eigenfactor adjustment (ERA) → volatility regime adjustment (VRA) → Σ_F, in the order of the report's Figure 1.",
+  },
+  {
+    n: "03",
+    zh: "特异风险右线",
+    en: "Specific-risk line",
+    dzh: "WLS 残差 → EW → Newey-West → 结构化 γ 混合 → 市值分组贝叶斯收缩 → 市值加权 VRA → σ_ε。",
+    den: "WLS residuals → EW → Newey-West → structural γ blend → size-group Bayesian shrinkage → cap-weighted VRA → σ_ε.",
+  },
+  {
+    n: "04",
+    zh: "在因子空间算 TE",
+    en: "TE in factor space",
+    dzh: "把主动权重投影到因子暴露上，用 Xᵀw 直接计算共同因子风险，再加对角特异风险；不构造稠密股票协方差矩阵。",
+    den: "Active weights are projected onto factor exposures. Common-factor risk uses Xᵀw directly, plus diagonal specific risk, so no dense stock covariance matrix is formed.",
+  },
+  {
+    n: "05",
+    zh: "修正原实现",
+    en: "Fixes to the original",
+    dzh: "把 γ 混合真正接入贝叶斯收缩；ERA 的 t_periods 改用估计窗口；修正 BETA / HALPHA 的斜率与截距定义。",
+    den: "The γ blend is actually connected to Bayesian shrinkage; ERA receives the estimation-window length; the slope and intercept definitions behind BETA and HALPHA are corrected.",
+  },
+  {
+    n: "06",
+    zh: "重构但数学一致",
+    en: "Refactor with numerical proof",
+    dzh: "EW / NW / VRA / γ 全部向量化，ERA 改为按月降频；selftest 用 AST 抽取原实现纯函数，在随机数据上逐值比对。",
+    den: "EW, NW, VRA and γ are vectorised and ERA runs monthly; a selftest extracts the original pure functions with AST and compares them value by value on random data.",
+  },
+];
+---
+
+<Base
+  title="类 Barra CNE6 风险模型 · Quant Research Portfolio"
+  description="因子暴露生产与因子 / 个股协方差估计：Newey-West、特征值调整、VRA、结构化特异风险与贝叶斯收缩"
+>
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="eyebrow">
+        <span data-i18n="zh">项目 03 · 风险建模</span>
+        <span data-i18n="en">Project 03 · Risk modelling</span>
+      </p>
+      <div class="hero-narrow">
+        <Bi
+          tag="h1"
+          zh="类 Barra CNE6 风险模型"
+          en="Barra CNE6-style risk model"
+        />
+        <Bi
+          tag="p"
+          class="lede"
+          zh="把个股风险拆成共同因子风险与个股特异风险，分别估计因子协方差和特异波动率，再以 Σ = XΣ_FXᵀ + diag(σ_ε²) 汇合。组合优化直接使用分解形式计算跟踪误差。"
+          en="Stock risk is split into common-factor risk and idiosyncratic risk. Factor covariance and specific volatility are estimated separately, then merged as Σ = XΣ_FXᵀ + diag(σ_ε²). Portfolio construction computes tracking error directly from that decomposition."
+        />
+      </div>
+      <ul class="pills">
+        <li class="pill">Python</li>
+        <li class="pill">NumPy / pandas</li>
+        <li class="pill">PyTorch / CUDA</li>
+        <li class="pill">Newey-West</li>
+        <li class="pill">Eigenfactor · VRA</li>
+        <li class="pill">Bayesian shrinkage</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band band-soft band-sm">
+    <div class="wrap">
+      <div class="metrics">
+        <div class="metric featured">
+          <div class="v">39</div>
+          <Bi tag="div" class="k" zh="汇合层共同因子暴露" en="Common-factor exposures at merge" />
+        </div>
+        <div class="metric">
+          <div class="v">90</div>
+          <Bi tag="div" class="k" zh="平台风险因子列" en="Risk-factor columns in the platform" />
+        </div>
+        <div class="metric">
+          <div class="v">125</div>
+          <Bi tag="div" class="k" zh="滚动 TE 校准期" en="Rolling TE calibration periods" />
+        </div>
+        <div class="metric">
+          <div class="v">100</div>
+          <Bi tag="div" class="k" zh="ERA 蒙特卡洛模拟" en="ERA Monte-Carlo draws" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">01 / Problem</span>
+        <Bi tag="h2" zh="历史协方差不够用" en="Why a historical covariance is not enough" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="指数增强的约束写在主动风险上。若直接用股票历史收益算一个协方差矩阵，样本噪声、非同步交易和市值结构会让 800×800 的矩阵极不稳定；更关键的是，它无法回答「这点跟踪误差来自哪些共同因子、多少来自个股」。"
+          en="An enhanced index constrains active risk. A raw historical covariance over stock returns is noisy, distorted by asynchronous trading and size structure, and unstable at 800×800. More importantly, it cannot say which common factors drive a given tracking error and how much is idiosyncratic."
+        />
+        <Bi
+          zh="所以风险层需要两条链路：一条估计因子协方差，一条估计个股特异风险，最后按暴露矩阵汇合。这样既能在优化中直接算 TE，也能做风险归因和中间量复核。"
+          en="The risk layer therefore needs two chains — factor covariance and idiosyncratic risk — merged through the exposure matrix. That supports direct TE evaluation in the optimiser, risk attribution, and independent checks of every intermediate quantity."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">02 / Method</span>
+        <Bi tag="h2" zh="暴露、协方差与工程修正" en="Exposures, covariance and engineering fixes" />
+      </div>
+      <div class="features">
+        {features.map((f) => (
+          <div class="feature">
+            <span class="n">{f.n}</span>
+            <Bi tag="h3" zh={f.zh} en={f.en} />
+            <Bi tag="p" zh={f.dzh} en={f.den} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">03 / Architecture</span>
+        <Bi tag="h2" zh="两条估计链路与汇合" en="Two estimation lines and the merge" />
+      </div>
+      <figure>
+        <img
+          src={diagramZh}
+          data-src-zh={diagramZh}
+          data-src-en={diagramEn}
+          alt="类 Barra CNE6 因子协方差与特异风险估计流程图"
+          data-alt-zh="类 Barra CNE6 因子协方差与特异风险估计流程图"
+          data-alt-en="Barra CNE6-style factor covariance and specific-risk flow"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="左线处理因子收益，右线处理 WLS 残差；两条线都经过 EW 与 Newey-West，但右线多出结构化 γ 混合与贝叶斯收缩。汇合后得到个股协方差，优化器只读取暴露、Σ_F 与 σ_ε。"
+            en="The left line processes factor returns, the right line WLS residuals. Both pass through EW and Newey-West; the right line adds the structural γ blend and Bayesian shrinkage. The merge yields stock covariance, and the optimiser only reads exposures, Σ_F and σ_ε."
+          />
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">04 / Diagnostics</span>
+        <Bi tag="h2" zh="风险诊断与 TE 校准" en="Risk diagnostics and TE calibration" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="单期风险诊断来自 2022-01-17 的冻结留出调仓；TE 校准覆盖 2016-01-12 → 2026-06-08 的 125 个持有期。两者使用同一套平台风险层，但不是同一估计口径。"
+          en="The one-period diagnostic comes from the frozen-holdout rebalance on 2022-01-17; TE calibration covers 125 holding periods from 2016-01-12 to 2026-06-08. Both use the platform risk layer, but they are not the same estimation convention."
+        />
+      </div>
+
+      <table style="margin-bottom: var(--s-48)">
+        <thead>
+          <tr>
+            <th><span data-i18n="zh">单期诊断</span><span data-i18n="en">One-period diagnostic</span></th>
+            <th class="num"><span data-i18n="zh">数值</span><span data-i18n="en">Value</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {diagnosticRows.map((r) => (
+            <tr>
+              <td><Bi tag="span" zh={r.zh} en={r.en} /></td>
+              <td class="num">{r.v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <table>
+        <thead>
+          <tr>
+            <th><span data-i18n="zh">TE 校准</span><span data-i18n="en">TE calibration</span></th>
+            <th class="num"><span data-i18n="zh">数值</span><span data-i18n="en">Value</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {calibrationRows.map((r) => (
+            <tr>
+              <td><Bi tag="span" zh={r.zh} en={r.en} /></td>
+              <td class="num">{r.hl ? <span class="hl">{r.v}</span> : r.v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <figure class="fig-narrow">
+        <Shot
+          name="p3_te_calibration"
+          altZh="预测年化跟踪误差与实现年化跟踪误差的散点关系"
+          altEn="Predicted annualised tracking error against realised annualised tracking error"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="每个点是一个持有期的预测量与实现量，共 125 期；虚线为 y = x。大多数预测值贴在 15% 的硬约束上，横轴几乎没有变化，这解释了低相关：TE 预算通常被优化器用满，而实现风险只有预测的一半左右。"
+            en="Each point is one holding period's predicted and realised TE, 125 in total; the dashed line is y = x. Most predictions sit on the 15% hard cap, leaving almost no variation on the x-axis. That explains the low correlation: the optimiser usually uses the whole budget while realised risk is about half of it."
+          />
+        </figcaption>
+      </figure>
+
+      <div class="callout dark">
+        <Bi
+          tag="span"
+          zh="这页最重要的结论不是「模型很准」，而是「风险预算被用满、实现风险偏低」。平均实现 / 预测为 0.436，相关 0.269；风险模型能做风险分解，但还不能可靠地区分不同组合的相对风险。"
+          en="The point is not that the model is accurate. The budget is fully used and realised risk is low: mean realised/predicted is 0.436 and correlation is 0.269. The model supports decomposition, but it does not yet discriminate reliably between portfolios' relative risk."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">05 / Implementation</span>
+        <Bi tag="h2" zh="重构、验证与接入" en="Refactor, verification and integration" />
+      </div>
+      <div class="features">
+        <div class="feature">
+          <span class="n">01</span>
+          <Bi tag="h3" zh="逐值一致的参照" en="Value-level reference" />
+          <Bi
+            tag="p"
+            zh="selftest 从原实现抽取 EW / NW / VRA / γ 纯函数，在随机数据上比对；重构不靠「看起来一样」。"
+            en="The selftest extracts the original EW, NW, VRA and γ functions and compares them on random data. The refactor is not accepted on appearance."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">02</span>
+          <Bi tag="h3" zh="向量化与降频" en="Vectorisation and cadence" />
+          <Bi
+            tag="p"
+            zh="EW / NW / VRA / γ 改为批量矩阵运算；ERA 从逐日 × 100 次 bootstrap 改为按月执行。"
+            en="EW, NW, VRA and γ run as batched matrix operations; ERA moves from daily × 100 bootstraps to a monthly cadence."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">03</span>
+          <Bi tag="h3" zh="中间量可复核" en="Intermediate state" />
+          <Bi
+            tag="p"
+            zh="因子协方差、特异波动率、VRA 乘子、最小特征值与诊断表落盘，可独立复算 TE。"
+            en="Factor covariance, specific volatility, VRA multipliers, the minimum eigenvalue and the diagnostic table are written out, allowing TE to be recomputed."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">04</span>
+          <Bi tag="h3" zh="接入优化器" en="Optimiser integration" />
+          <Bi
+            tag="p"
+            zh="组合层只消费 X、Σ_F 与 σ_ε，TE 以分解形式进入二阶锥约束，避免 800×800 稠密矩阵。"
+            en="Construction consumes only X, Σ_F and σ_ε. TE enters the second-order cone in decomposed form, avoiding an 800×800 dense matrix."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">06 / Limitations</span>
+        <Bi tag="h2" zh="局限与下一步" en="Limitations and next steps" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <Bi
+              tag="span"
+              zh="校准能力仍弱：125 期平均相关 0.269，回归斜率 0.434，平均绝对误差 8.19 个百分点。"
+              en="Calibration remains weak: across 125 periods correlation is 0.269, slope 0.434 and mean absolute error 8.19 percentage points."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="结构化 γ 分支并非每期都改写特异风险；2022-01-17 的诊断里 adjusted share 为 0，γ 均值为 1。不能把它当作稳定增量。"
+              en="The structural γ branch does not rewrite specific risk every period. On 2022-01-17 the adjusted share was 0 and mean γ was 1, so it cannot be treated as a stable increment."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="专题汇合层是 39 维暴露，平台生产风险诊断落盘 90 个风险因子列，两者口径不同；页面上的数字不应当互换使用。"
+              en="The deep dive merges 39 exposures, while the platform's production diagnostic writes 90 risk-factor columns. The conventions differ and the numbers should not be used interchangeably."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="下一步：按市场状态校准 VRA，检验共同因子与特异风险各自对 TE 误差的贡献，并把预测 TE 到实现 TE 的映射做成显式的样本外校准层。"
+              en="Next: calibrate VRA by regime, decompose TE error into common-factor and specific contributions, and make the predicted-to-realised TE mapping an explicit out-of-sample layer."
+            />
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">07 / References</span>
+        <Bi tag="h2" zh="相关页面与材料" en="Related pages and materials" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <a href={diagramZh}><span data-i18n="zh">协方差流程图（中文）</span><span data-i18n="en">Covariance flow (Chinese)</span></a>
+            · <a href={diagramEn}><span data-i18n="zh">协方差流程图（英文）</span><span data-i18n="en">Covariance flow (English)</span></a>
+          </li>
+          <li>
+            <a href={p1}><span data-i18n="zh">平台页：中证 800 指数增强研究平台</span><span data-i18n="en">Platform: CSI 800 enhanced-index research platform</span></a>
+          </li>
+          <li>
+            <a href={p2}><span data-i18n="zh">相关专题：动态多专家 Alpha 融合与路由</span><span data-i18n="en">Related: dynamic multi-expert alpha blending</span></a>
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="数据来源：风险诊断、因子协方差与 TE 校准结果文件（不公开，可当面演示复算）。"
+              en="Data source: risk diagnostics, factor covariance and TE calibration result files (not public; recomputation can be demonstrated in person)."
+            />
+          </li>
+        </ul>
+      </div>
+      <div class="pager">
+        <a href={base}>
+          <span data-i18n="zh">← 返回首页</span>
+          <span data-i18n="en">← BACK TO HOME</span>
+        </a>
+        <a href={p1}>
+          <span data-i18n="zh">所属平台：中证 800 研究平台 →</span>
+          <span data-i18n="en">PLATFORM: CSI 800 RESEARCH STACK →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="780" viewBox="0 0 1200 780" font-family="Geist,'Inter',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="p3a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a1a1a1"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="780" fill="#ffffff"/>
+  <text x="60" y="55" font-size="30" font-weight="600" letter-spacing="-1.1" fill="#171717">Barra CNE6-style risk model · covariance estimation</text>
+  <text x="60" y="86" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="13" letter-spacing="0.5" fill="#767676">TWO PARALLEL LINES: FACTOR COVARIANCE Σ_F AND IDIOSYNCRATIC RISK σ_ε, MERGED INTO THE STOCK MATRIX</text>
+  <rect x="60" y="104" width="1080" height="2" fill="#171717"/>
+
+  <text x="90" y="136" font-size="16" font-weight="600" fill="#171717">Left line: factor covariance Σ_F</text>
+  <text x="670" y="136" font-size="16" font-weight="600" fill="#171717">Right line: idiosyncratic risk σ_ε</text>
+
+  <rect x="90" y="152" width="430" height="58" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="110" y="188" font-size="15" fill="#171717">Factor returns (cap-weighted WLS)</text>
+
+  <rect x="90" y="226" width="430" height="58" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="110" y="262" font-size="15" fill="#171717">EW time weights (correlation 200 / volatility 42)</text>
+
+  <rect x="90" y="300" width="430" height="58" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="110" y="336" font-size="15" fill="#171717">Newey-West autocorrelation adjustment</text>
+
+  <rect x="90" y="374" width="430" height="58" rx="8" fill="#ffffff" stroke="#171717" stroke-width="2"/>
+  <text x="110" y="410" font-size="15" fill="#171717">Eigenfactor adjustment (ERA)</text>
+
+  <rect x="90" y="448" width="430" height="58" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="110" y="484" font-size="15" fill="#171717">Volatility regime adjustment (VRA)</text>
+
+  <rect x="90" y="522" width="430" height="58" rx="8" fill="#171717"/>
+  <text x="110" y="558" font-size="15" font-weight="600" fill="#ffffff">Σ_F (factor covariance matrix)</text>
+
+  <rect x="670" y="152" width="430" height="52" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="690" y="184" font-size="15" fill="#171717">Residual returns (WLS residuals)</text>
+
+  <rect x="670" y="218" width="430" height="52" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="690" y="250" font-size="15" fill="#171717">EW time weights (half-life 42)</text>
+
+  <rect x="670" y="284" width="430" height="52" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="690" y="316" font-size="15" fill="#171717">Newey-West autocorrelation adjustment</text>
+
+  <rect x="670" y="350" width="430" height="52" rx="8" fill="#ffffff" stroke="#171717" stroke-width="2"/>
+  <text x="690" y="382" font-size="15" fill="#171717">Structural model γ blend (data count × outliers)</text>
+
+  <rect x="670" y="416" width="430" height="52" rx="8" fill="#ffffff" stroke="#171717" stroke-width="2"/>
+  <text x="690" y="448" font-size="15" fill="#171717">Bayesian shrinkage (size groups to group mean)</text>
+
+  <rect x="670" y="482" width="430" height="52" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="690" y="514" font-size="15" fill="#171717">Volatility regime adjustment (VRA, cap-weighted)</text>
+
+  <rect x="670" y="548" width="430" height="52" rx="8" fill="#171717"/>
+  <text x="690" y="580" font-size="15" font-weight="600" fill="#ffffff">σ_ε (stock-specific volatility)</text>
+
+  <path d="M305 210 V220" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M305 284 V294" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M305 358 V368" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M305 432 V442" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M305 506 V516" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+
+  <path d="M885 204 V212" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M885 270 V278" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M885 336 V344" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M885 402 V410" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M885 468 V476" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+  <path d="M885 534 V542" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+
+  <path d="M305 580 V638 H885 V604" stroke="#a1a1a1" stroke-width="1.5" fill="none"/>
+  <path d="M600 638 V654" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p3a)"/>
+
+  <rect x="90" y="660" width="1020" height="86" rx="8" fill="#171717"/>
+  <text x="110" y="694" font-size="17" font-weight="600" fill="#ffffff">Merge: Σ = X · Σ_F · Xᵀ + diag(σ_ε²)</text>
+  <text x="110" y="722" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11.5" fill="#a1a1a1">STOCK COVARIANCE = COMMON-FACTOR RISK (EXPOSURE × FACTOR COVARIANCE × EXPOSUREᵀ) + IDIOSYNCRATIC RISK</text>
+</svg>

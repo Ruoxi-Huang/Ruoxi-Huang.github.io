@@ -1,0 +1,377 @@
+---
+import Base from "../../layouts/Base.astro";
+import Bi from "../../components/Bi.astro";
+import Shot from "../../components/Shot.astro";
+
+const base = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/`;
+const diagramZh = `${base}diagrams/p1_platform_architecture.svg`;
+const diagramEn = `${base}diagrams/p1_platform_architecture_en.svg`;
+const p2 = `${base}projects/p2-dynamic-blend/`;
+const p3 = `${base}projects/p3-barra-cne6/`;
+
+const platformRows = [
+  { zh: "组合净总收益", en: "Portfolio net cumulative return", v: "306.51%" },
+  { zh: "模型基准总收益", en: "Model-benchmark cumulative return", v: "95.32%" },
+  { zh: "中证 800 指数总收益", en: "CSI 800 cumulative return", v: "42.16%" },
+  { zh: "净主动累计收益", en: "Net active cumulative return", v: "108.13%" },
+  { zh: "年化主动收益", en: "Annualised active return", v: "7.59%" },
+  { zh: "信息比率", en: "Information ratio", v: "1.150", hl: true },
+  { zh: "实现年化跟踪误差", en: "Realised annualised tracking error", v: "6.60%" },
+  { zh: "主动最大回撤", en: "Active maximum drawdown", v: "-13.29%" },
+  { zh: "平均单边换手", en: "Average one-way turnover", v: "48.28%" },
+  { zh: "累计交易成本", en: "Cumulative trading cost", v: "2.99%" },
+];
+
+const features = [
+  {
+    n: "01",
+    zh: "单一时点股票池",
+    en: "One point-in-time universe",
+    dzh: "每个调仓日只使用此前最近一期中证 800 权重；股票代码统一为 JoinQuant 记法，避免价格、权重、市值与持仓之间的静默错位。",
+    den: "Each rebalance sees only the latest CSI 800 weights available before it. JoinQuant codes are enforced end to end so prices, weights, market caps and holdings cannot silently drift apart.",
+  },
+  {
+    n: "02",
+    zh: "原子化数据管道",
+    en: "Atomic data pipeline",
+    dzh: "PostgreSQL 全量与增量重建、追加去重、本地 Feather 快照；另有 6 个 CNINFO 每日任务，失败隔离并留下带时间戳日志。",
+    den: "Full and incremental PostgreSQL rebuilds, append-and-deduplicate, local Feather snapshots, plus six daily CNINFO jobs with failure isolation and timestamped logs.",
+  },
+  {
+    n: "03",
+    zh: "因子层与模型层分开",
+    en: "Factors separate from models",
+    dzh: "149 个标准化因子面板由独立引擎构建；生产 Alpha 使用其中 89 个，因子正交化、筛选与诊断不需要改回测代码。",
+    den: "149 standardised panels are built by a separate engine. Production alpha uses 89 of them; orthogonalisation, selection and diagnostics need no change to the backtest code.",
+  },
+  {
+    n: "04",
+    zh: "Alpha 层可插拔",
+    en: "Pluggable alpha layer",
+    dzh: "Linear IC、XGBoost 残差与 40 日 GRU 共用同一套股票池、风险模型与成本口径；路由器位于模型与组合之间。",
+    den: "Linear IC, the XGBoost residual and the 40-day GRU share one universe, risk model and cost convention. The router sits between the experts and the portfolio.",
+  },
+  {
+    n: "05",
+    zh: "风险与优化解耦",
+    en: "Risk decoupled from construction",
+    dzh: "风险模型输出因子协方差与特异波动率；优化器只消费这些中间量。连续路径用 Clarabel SOCP，稀疏持仓路径用 Gurobi MIQCP。",
+    den: "The risk model emits factor covariance and specific volatility; the optimiser consumes them. Clarabel solves the continuous SOCP, Gurobi the sparse MIQCP.",
+  },
+  {
+    n: "06",
+    zh: "每个决策都可回溯",
+    en: "Every decision is traceable",
+    dzh: "每个调仓日写出目标权重、Alpha、因子权重、协方差、特异风险、求解器状态、风险诊断与 TE 校准，不靠日志猜测当时发生了什么。",
+    den: "Each rebalance writes target weights, alpha, factor weights, covariance, specific risk, solver status, risk diagnostics and TE calibration. Nothing has to be reconstructed from logs.",
+  },
+];
+---
+
+<Base
+  title="中证 800 指数增强研究平台 · Quant Research Portfolio"
+  description="从数据接入、因子工程、点时 Alpha、类 Barra 风险模型到跟踪误差约束优化与日频回测的中证 800 指数增强研究平台"
+>
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="eyebrow">
+        <span data-i18n="zh">项目 02 · 平台主项目</span>
+        <span data-i18n="en">Project 02 · Platform</span>
+      </p>
+      <div class="hero-narrow">
+        <Bi
+          tag="h1"
+          zh="中证 800 指数增强研究平台"
+          en="CSI 800 enhanced-index research platform"
+        />
+        <Bi
+          tag="p"
+          class="lede"
+          zh="从零搭建的端到端研究系统：数据接入、149 个标准化因子面板、点时 Alpha、类 Barra 风险分解、跟踪误差约束优化、日频回测与可审计输出。专家融合与 CNE6 协方差两个专题都在这个平台内落地。"
+          en="An end-to-end research stack built from scratch: data ingestion, 149 standardised factor panels, point-in-time alpha, Barra-style risk decomposition, tracking-error-constrained construction, daily backtesting and auditable outputs. Both the expert blend and the CNE6 covariance deep dive run inside it."
+        />
+      </div>
+      <ul class="pills">
+        <li class="pill">Python</li>
+        <li class="pill">PostgreSQL</li>
+        <li class="pill">XGBoost</li>
+        <li class="pill">PyTorch / CUDA</li>
+        <li class="pill">Clarabel · Gurobi</li>
+        <li class="pill">
+          <span data-i18n="zh">5 bps 单边成本</span>
+          <span data-i18n="en">5 bps one-way cost</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band band-soft band-sm">
+    <div class="wrap">
+      <div class="metrics">
+        <div class="metric featured">
+          <div class="v">89</div>
+          <Bi tag="div" class="k" zh="生产 Alpha 因子" en="Production alpha factors" />
+        </div>
+        <div class="metric">
+          <div class="v">89</div>
+          <Bi tag="div" class="k" zh="原始风险因子" en="Raw risk factors" />
+        </div>
+        <div class="metric">
+          <div class="v">124</div>
+          <Bi tag="div" class="k" zh="当前结果目录的调仓快照" en="Rebalance snapshots in the current result set" />
+        </div>
+        <div class="metric">
+          <div class="v">407</div>
+          <Bi tag="div" class="k" zh="pytest 收集用例" en="Collected pytest cases" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">01 / Problem</span>
+        <Bi tag="h2" zh="为什么需要一套平台" en="Why a platform, not a script" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="指数增强的目标很直接：在相对中证 800 的跟踪误差预算内获取稳定超额。真正难的是让这条链路每次都能按同一口径重跑。数据版本、股票池、因子快照、风险估计、优化约束或成本假设只要有一处对齐错误，回测就会给出一个看起来合理、实际上无法解释的结果。"
+          en="The objective is simple: earn stable active return inside a tracking-error budget against the CSI 800. The difficult part is making the chain rerun under one identical convention every time. A single misalignment in data vintage, universe, factor snapshot, risk estimate, constraint or cost assumption produces a plausible-looking result that cannot be explained."
+        />
+        <Bi
+          zh="平台因此按「数据 → 因子 → Alpha → 风险 → 优化 → 回测」拆分模块，用 YAML 驱动实验，并让每个调仓日输出完整中间量。研究可以替换任何一层，但不必重写其余部分。"
+          en="The platform therefore separates data, factors, alpha, risk, optimisation and backtesting, drives experiments from YAML, and writes complete intermediate state at every rebalance. A researcher can replace one layer without rewriting the rest."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">02 / Method</span>
+        <Bi tag="h2" zh="六条设计决策" en="Six design decisions" />
+      </div>
+      <div class="features">
+        {features.map((f) => (
+          <div class="feature">
+            <span class="n">{f.n}</span>
+            <Bi tag="h3" zh={f.zh} en={f.en} />
+            <Bi tag="p" zh={f.dzh} en={f.den} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">03 / Architecture</span>
+        <Bi tag="h2" zh="系统架构与数据流" en="System architecture and data flow" />
+      </div>
+      <figure>
+        <img
+          src={diagramZh}
+          data-src-zh={diagramZh}
+          data-src-en={diagramEn}
+          alt="中证 800 指数增强研究平台系统架构图"
+          data-alt-zh="中证 800 指数增强研究平台系统架构图"
+          data-alt-en="CSI 800 enhanced-index research platform architecture"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="上层三个模块依次产出数据、因子与 Alpha；风险模型独立估计共同因子与特异风险，优化器在 TE、权重与主动偏离约束下求解；最下方是每个调仓日与回测阶段的固定输出契约。"
+            en="The top row produces data, factors and alpha in sequence. The risk model estimates common-factor and specific risk independently, and the optimiser solves under TE, weight and active-weight constraints. The bottom band is the fixed output contract for every rebalance and backtest."
+          />
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">04 / Results</span>
+        <Bi tag="h2" zh="端到端长区间结果" en="Long end-to-end run" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="区间 2016-01-12 → 2026-06-08，共 2,525 个交易日、125 个持有期。组合净收益已扣单边 5 bps 交易成本；模型基准是同一风险模型与约束下的基准复制组合，指数为基准收益的中证 800 指数。"
+          en="2016-01-12 to 2026-06-08: 2,525 trading days across 125 holding periods. Portfolio returns are net of a 5 bps one-way cost. The model benchmark replicates the index under the same risk model and constraints; the index row uses the CSI 800 index return."
+        />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th><span data-i18n="zh">指标</span><span data-i18n="en">Metric</span></th>
+            <th class="num"><span data-i18n="zh">数值</span><span data-i18n="en">Value</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {platformRows.map((r) => (
+            <tr>
+              <td><Bi tag="span" zh={r.zh} en={r.en} /></td>
+              <td class="num">{r.hl ? <span class="hl">{r.v}</span> : r.v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <figure>
+        <Shot
+          name="p1_nav"
+          altZh="2016 至 2026 年组合、模型基准与中证 800 的累计净值"
+          altEn="Cumulative NAV of the portfolio, model benchmark and CSI 800 from 2016 to 2026"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="组合（深黑）、模型基准（中灰虚线）与中证 800（浅灰点线）均以 2016-01-12 为 1。组合净值为 4.07×，模型基准 1.95×，指数 1.42×。组合收益已扣单边 5 bps 成本，基准与指数不计成本。"
+            en="Portfolio (ink), model benchmark (mid-grey dashed) and CSI 800 (light-grey dotted) all start at 1 on 2016-01-12. The portfolio ends at 4.07x, the model benchmark at 1.95x and the index at 1.42x. The portfolio is net of a 5 bps one-way cost; benchmark and index are gross."
+          />
+        </figcaption>
+      </figure>
+
+      <div class="callout dark">
+        <Bi
+          tag="span"
+          zh="平台最早一轮 2011-09-14 → 2026-02-27 长区间回测中，组合总收益 320.69%、中证 800 为 81.66%，相对指数年化超额 6.17%、IR 1.47。它证明闭环已经能稳定运行；对外主结论仍以更新的冻结留出为准。"
+          en="The earliest long run, 2011-09-14 to 2026-02-27, returned 320.69% against 81.66% for the CSI 800, with 6.17% annualised active return and a 1.47 IR. It proves the loop could run end to end; the newer frozen holdout remains the headline claim."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">05 / Implementation</span>
+        <Bi tag="h2" zh="工程实现与可复现性" en="Implementation and reproducibility" />
+      </div>
+      <div class="features">
+        <div class="feature">
+          <span class="n">01</span>
+          <Bi tag="h3" zh="一套 CLI" en="One CLI" />
+          <Bi
+            tag="p"
+            zh="单期调仓、批量调仓、回测、Alpha 对比与持仓导出都由 main.py 调度；实验只改 YAML。"
+            en="Single rebalances, batches, backtests, alpha comparisons and holdings exports all dispatch through main.py; experiments change YAML only."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">02</span>
+          <Bi tag="h3" zh="数据增量更新" en="Incremental data" />
+          <Bi
+            tag="p"
+            zh="PostgreSQL 重建与追加去重可重复执行；本地 Feather 快照减少重复拉取。"
+            en="PostgreSQL rebuilds and append-and-deduplicate are repeatable; local Feather snapshots cut repeated fetches."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">03</span>
+          <Bi tag="h3" zh="固定输出契约" en="Fixed output contract" />
+          <Bi
+            tag="p"
+            zh="目标权重、主动权重、Alpha、因子权重、协方差、特异风险、求解器状态与 TE 校准逐期落盘。"
+            en="Target and active weights, alpha, factor weights, covariance, specific risk, solver status and TE calibration are written every period."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">04</span>
+          <Bi tag="h3" zh="测试与查看器" en="Tests and viewer" />
+          <Bi
+            tag="p"
+            zh="407 个 pytest 用例覆盖因子公式、Alpha 融合、股票池、爬虫与集成流程；只读网页查看器用于复核收益、调仓与风险诊断。"
+            en="407 collected pytest cases cover factor formulas, alpha blending, the universe, crawlers and integration. A read-only web viewer reviews returns, rebalances and risk diagnostics."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">06 / Limitations</span>
+        <Bi tag="h2" zh="局限与后续工作" en="Limitations and next steps" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <Bi
+              tag="span"
+              zh="全部数字均为历史回测结果，不是实盘业绩；对股票池、风险预算、调仓频率与成本假设敏感。"
+              en="Every figure is a historical backtest, not live performance, and is sensitive to the universe, risk budget, schedule and costs."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="风险预算明显偏保守：预测 TE 平均 14.48%，实现 TE 平均 6.29%，两者相关只有 0.269。P3 对这一层做了单独复盘。"
+              en="The risk budget is visibly conservative: mean predicted TE is 14.48% against 6.29% realised, with a 0.269 correlation. The CNE6 page audits this layer separately."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="换手仍偏高：长区间平均单边换手 48.28%，累计建模成本 2.99%。实盘还需加入冲击成本、流动性与容量约束。"
+              en="Turnover remains high: 48.28% average one-way over the long run and 2.99% cumulative modelled cost. Live use still needs impact, liquidity and capacity constraints."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="稀疏持仓路径已实现 100–200 只的整数约束，但默认生产路径仍是连续 SOCP；行业与风格主动暴露约束也还没有成为产品级硬约束。"
+              en="The sparse path implements a 100–200 name integer constraint, but the default production path is still the continuous SOCP. Industry and style active-exposure limits are not yet product-grade hard constraints."
+            />
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">07 / References</span>
+        <Bi tag="h2" zh="相关页面与材料" en="Related pages and materials" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <a href={diagramZh}><span data-i18n="zh">架构图（中文）</span><span data-i18n="en">Architecture (Chinese)</span></a>
+            · <a href={diagramEn}><span data-i18n="zh">架构图（英文）</span><span data-i18n="en">Architecture (English)</span></a>
+          </li>
+          <li>
+            <a href={p2}><span data-i18n="zh">专题：动态多专家 Alpha 融合与路由</span><span data-i18n="en">Deep dive: dynamic multi-expert alpha blending</span></a>
+          </li>
+          <li>
+            <a href={p3}><span data-i18n="zh">专题：类 Barra CNE6 风险模型</span><span data-i18n="en">Deep dive: Barra CNE6-style risk model</span></a>
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="数据来源：项目 outputs/ 下的逐期调仓与回测结果（不公开，可当面演示复算）。"
+              en="Data source: per-period rebalance and backtest outputs under the project's outputs/ directory (not public; recomputation can be demonstrated in person)."
+            />
+          </li>
+        </ul>
+      </div>
+      <div class="pager">
+        <a href={base}>
+          <span data-i18n="zh">← 返回首页</span>
+          <span data-i18n="en">← BACK TO HOME</span>
+        </a>
+        <a href={p2}>
+          <span data-i18n="zh">下一个：动态多专家 Alpha →</span>
+          <span data-i18n="en">NEXT: DYNAMIC ALPHA BLEND →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>

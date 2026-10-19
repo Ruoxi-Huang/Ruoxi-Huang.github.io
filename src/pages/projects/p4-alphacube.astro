@@ -1,0 +1,471 @@
+---
+import Base from "../../layouts/Base.astro";
+import Bi from "../../components/Bi.astro";
+
+const base = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/`;
+const diagramZh = `${base}diagrams/p4_alphacube_three_faces.svg`;
+const diagramEn = `${base}diagrams/p4_alphacube_three_faces_en.svg`;
+const p1 = `${base}projects/p1-platform/`;
+const p2 = `${base}projects/p2-dynamic-blend/`;
+
+const testRows = [
+  {
+    zh: "测试段超额夏普",
+    en: "Excess Sharpe, test segment",
+    champion: "+2.28",
+    platform: "+2.12 ~ +2.48",
+    noReserve: "+1.39",
+  },
+  {
+    zh: "超额年化收益",
+    en: "Annualised excess return",
+    champion: "+17.0%",
+    platform: "—",
+    noReserve: "—",
+  },
+  {
+    zh: "超额最大回撤",
+    en: "Excess maximum drawdown",
+    champion: "-7.2%",
+    platform: "约 -7%",
+    noReserve: "—",
+  },
+  {
+    zh: "绝对夏普",
+    en: "Absolute Sharpe",
+    champion: "1.16",
+    platform: "—",
+    noReserve: "—",
+  },
+  {
+    zh: "期末资金（100 万起）",
+    en: "Ending capital (from CNY 1m)",
+    champion: "206.5 万",
+    platform: "—",
+    noReserve: "—",
+  },
+  {
+    zh: "年化费用",
+    en: "Annual cost",
+    champion: "1.22%",
+    platform: "1.2% ~ 2.0%",
+    noReserve: "6.1%",
+  },
+];
+
+const contractRows = [
+  {
+    zh: "DT 三族 / NT 两族 / ND 面板",
+    en: "DT / NT / ND faces",
+    dzh: "与逐股票、逐日或整面板直接调用核函数逐 bit 相同。",
+    den: "Bit-identical to calling the kernel per stock, per day or on the whole panel.",
+  },
+  {
+    zh: "任意分块与轮次结构",
+    en: "Any chunking and round structure",
+    dzh: "CPU 上 150 棵随机文法树逐 bit 不变，包括 S→D→S 落盘交接。",
+    den: "On CPU, 150 random grammar trees stay bit-identical, including S→D→S disk hand-offs.",
+  },
+  {
+    zh: "跨设备契约",
+    en: "Cross-device contract",
+    dzh: "不承诺逐 bit；承诺没有算子只在加速器上失败、有限 / NaN 版图不变、选择类算子逐 bit 相同。",
+    den: "Bit equality is not promised. No operator fails only on an accelerator; the finite/NaN map is unchanged; selection operators are bit-identical.",
+  },
+  {
+    zh: "float64 参照模式",
+    en: "float64 reference mode",
+    dzh: "给 float32 答案一个可测量的真值。例如 nt_ts_hurst 自身离 float64 有 11,296 ULP，因此不能把 ULP 差直接读成设备故障。",
+    den: "Gives the float32 answer a measurable truth. For example nt_ts_hurst itself sits 11,296 ULP from float64, so a ULP gap cannot be read as a device fault.",
+  },
+];
+
+const features = [
+  {
+    n: "01",
+    zh: "一个数据对象",
+    en: "One data object",
+    dzh: "立方体 (S, D, M) 替代 ND 日频面板与 DT 分钟面板两套世界；一份注册表、一个解析器、一个引擎。",
+    den: "The cube (S, D, M) replaces the separate ND daily and DT minute worlds: one registry, one parser, one engine.",
+  },
+  {
+    n: "02",
+    zh: "三张面，双份注册",
+    en: "Three faces, dual registration",
+    dzh: "DT / ND / NT 三张面共享核函数；同一函数在「股票×天」与「股票×分钟」语义不同，必须用名字消歧。",
+    den: "DT, ND and NT share the kernel library. The same function means different things on stock × day and stock × minute, so names disambiguate the face.",
+  },
+  {
+    n: "03",
+    zh: "静态类型约束",
+    en: "Static type checks",
+    dzh: "collapsed / degenerate / width 三个属性分开追踪；根必须退化，分钟算子不能套在坍缩操作数上。",
+    den: "collapsed, degenerate and width are tracked separately. The root must be degenerate, and minute operators cannot consume collapsed operands.",
+  },
+  {
+    n: "04",
+    zh: "按轴分块调度",
+    en: "Axis-aware scheduling",
+    dzh: "P 整面板 / S 按股票 / D 按日分块；按轮次交接，边界掩码与全节点掩码逐 bit 等价。",
+    den: "P runs the whole panel, S chunks by stock and D by day. Hand-offs follow rounds; boundary masking is bit-identical to masking every node.",
+  },
+  {
+    n: "05",
+    zh: "三种 store 读法",
+    en: "Three store layouts",
+    dzh: "单目录、D 主序镜像与增量分段共用接口；生产数据直接可读，镜像让按日多股票读取变成连续读。",
+    den: "Single-directory, D-major mirror and segmented stores share one interface. Production data reads directly; the mirror turns by-day multi-stock reads into contiguous ones.",
+  },
+  {
+    n: "06",
+    zh: "五个 miner 一套底层",
+    en: "Five miners, one substrate",
+    dzh: "GP 与 AlphaGen / AlphaQCM / AlphaForge / AlphaSAGE 共用 RPN 文法、延迟批量奖励与因子池，PPO 可用于热启动。",
+    den: "GP and AlphaGen, AlphaQCM, AlphaForge and AlphaSAGE share the RPN grammar, delayed batch reward and factor pools; PPO can warm-start the search.",
+  },
+];
+---
+
+<Base
+  title="AlphaCube 三维张量因子挖掘 · Quant Research Portfolio"
+  description="把日频与分钟因子统一到一个 (股票, 交易日, 分钟) 立方体，并在其上运行 GP 与四个 RL miner"
+>
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="eyebrow">
+        <span data-i18n="zh">项目 04 · 独立平台</span>
+        <span data-i18n="en">Project 04 · Independent platform</span>
+      </p>
+      <div class="hero-narrow">
+        <Bi
+          tag="h1"
+          zh="AlphaCube 三维张量因子挖掘"
+          en="AlphaCube tensor factor mining"
+        />
+        <Bi
+          tag="p"
+          class="lede"
+          zh="把因子计算从「ND 日频面板 + DT 分钟面板」两个二维世界改成一个 (股票, 交易日, 分钟) 立方体，并把 GP、四个 RL miner、因子池、组合、模型、执行与回测迁到同一个抽象上。"
+          en="Factor computation moves from two 2-D worlds — an ND daily panel and a DT minute panel — to one (stock, day, minute) cube. GP, four RL miners, factor pools, models, execution and backtesting all run on that abstraction."
+        />
+      </div>
+      <ul class="pills">
+        <li class="pill">Python</li>
+        <li class="pill">PyTorch / CUDA</li>
+        <li class="pill">GP</li>
+        <li class="pill">PPO · IQN · GFlowNet</li>
+        <li class="pill">NumPy / mmap</li>
+        <li class="pill">15 bps 单边成本</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band band-soft band-sm">
+    <div class="wrap">
+      <div class="metrics">
+        <div class="metric featured">
+          <div class="v">+2.28</div>
+          <Bi tag="div" class="k" zh="测试段纯多头超额夏普" en="Long-only excess Sharpe on the test segment" />
+        </div>
+        <div class="metric">
+          <div class="v">242</div>
+          <Bi tag="div" class="k" zh="可搜索算子" en="Searchable operators" />
+        </div>
+        <div class="metric">
+          <div class="v">1,498</div>
+          <Bi tag="div" class="k" zh="历史因子语料" en="Legacy factor corpus" />
+        </div>
+        <div class="metric">
+          <div class="v">354</div>
+          <Bi tag="div" class="k" zh="测试通过（8 skip / 1 xfail）" en="Tests passed (8 skipped, 1 xfail)" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">01 / Problem</span>
+        <Bi tag="h2" zh="两个二维世界丢掉了表达力" en="Two 2-D worlds lose expressiveness" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="旧架构把数据拆成 DT 与 ND 两个世界：两套字段注册表、两个解析器、两条引擎，再靠物化胶水互搬。冗余还在类型层，真正的问题是没有任何算子使用第三张面 (M, S)——「每分钟跨股票排序，再在日内聚合」这类因子根本写不出来。"
+          en="The old architecture split data into DT and ND: two field registries, two parsers, two engines and materialisation glue between them. The redundancy sat in the type layer, but the real loss was that no operator used the third face (M, S). A factor such as “rank across stocks every minute, then aggregate within the day” could not be written."
+        />
+        <Bi
+          zh="在既有核函数库与下游阶段的基础上，AlphaCube 重构了数据与计算抽象，让一个立方体、一份注册表、一个引擎同时承载日频与分钟语义，并把搜索、生产计算与回测接到同一套接口上。"
+          en="Building on the existing kernel library and downstream stages, AlphaCube rebuilds the data and compute abstraction so one cube, one registry and one engine carry both daily and minute semantics, attaching search, production calculation and backtesting to one interface."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">02 / Method</span>
+        <Bi tag="h2" zh="抽象、调度与挖掘层" en="Abstraction, scheduling and mining" />
+      </div>
+      <div class="features">
+        {features.map((f) => (
+          <div class="feature">
+            <span class="n">{f.n}</span>
+            <Bi tag="h3" zh={f.zh} en={f.en} />
+            <Bi tag="p" zh={f.dzh} en={f.den} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">03 / Architecture</span>
+        <Bi tag="h2" zh="一个立方体，三张面" en="One cube, three faces" />
+      </div>
+      <figure>
+        <img
+          src={diagramZh}
+          data-src-zh={diagramZh}
+          data-src-en={diagramEn}
+          alt="AlphaCube 三维张量与 DT / ND / NT 三张面示意图"
+          data-alt-zh="AlphaCube 三维张量与 DT / ND / NT 三张面示意图"
+          data-alt-en="AlphaCube 3-D tensor and the DT, ND and NT faces"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="DT 面固定股票，看 (D, M)；ND 面把分钟归约后看 (D, S)；NT 面固定交易日，看 (M, S)。NT 面是新增表达力的来源，也是「按日分块、逐日调核」这一执行模式的定义来源。"
+            en="The DT face fixes a stock and sees (D, M); the ND face reduces minutes and sees (D, S); the NT face fixes a day and sees (M, S). NT supplies the new expressiveness and is why the engine has a per-day kernel-call execution mode."
+          />
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">04 / Results</span>
+        <Bi tag="h2" zh="规模、可交易结果与精度契约" en="Scale, tradable results and precision contracts" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="真实数据视图为 1,942 个交易日 × 5,220 只股票 × 241 分钟，8 个字段共约 80 GB。搜索注册表有 242 个算子；因子池从全市场分钟数据中挖掘，再进入纯多头真实账户回测。"
+          en="The live view is 1,942 trading days × 5,220 stocks × 241 minutes: eight fields, about 80 GB. The search registry has 242 operators. Factors are mined from full-market minute data and then passed to a long-only real-account backtest."
+        />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th><span data-i18n="zh">测试段（2023-08-08 → 2025-12-31）</span><span data-i18n="en">Test segment (2023-08-08 → 2025-12-31)</span></th>
+            <th class="num"><span data-i18n="zh">训练段选出</span><span data-i18n="en">Chosen on train</span></th>
+            <th class="num"><span data-i18n="zh">保留区平台</span><span data-i18n="en">Reserve-zone plateau</span></th>
+            <th class="num"><span data-i18n="zh">不设保留区</span><span data-i18n="en">No reserve zone</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {testRows.map((r) => (
+            <tr>
+              <td><Bi tag="span" zh={r.zh} en={r.en} /></td>
+              <td class="num"><span class="hl">{r.champion}</span></td>
+              <td class="num">{r.platform}</td>
+              <td class="num">{r.noReserve}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div class="prose">
+        <Bi
+          zh="回测从 2023-08-08 的 100 万元现金起步，按 A 股实际费率（佣金最低 5 元、印花税、过户费与 5 bps 滑点）、整手、涨停买不进与跌停卖不出。训练段的参数与保留区规则固定后，测试段只报数。"
+          en="The account starts with CNY 1m cash on 2023-08-08 under actual A-share fees (CNY 5 minimum commission, stamp duty, transfer fee and 5 bps slippage), board lots, and no fills at limit-up or limit-down. Parameters and retention rules are fixed on the training segment; the test segment only reports."
+        />
+      </div>
+
+      <div class="callout dark">
+        <Bi
+          tag="span"
+          zh="全样本 2018-01-04 → 2025-12-31 的 100 万元复利结果为 +784.6%、年化 32.7%、夏普 1.23、最大回撤 -34.5%。但 2023-08-08 之前属于样本内，且早期因子库含全样本挖掘偏差，因此干净样本外的主结论仍是测试段 +2.28。"
+          en="The full-sample CNY 1m account from 2018-01-04 to 2025-12-31 compounds to +784.6%, 32.7% annualised, a 1.23 Sharpe and a -34.5% maximum drawdown. The period before 2023-08-08 is in-sample, and the early factor library was mined on the full sample, so the clean out-of-sample headline remains the +2.28 test-segment result."
+        />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th><span data-i18n="zh">精度契约</span><span data-i18n="en">Precision contract</span></th>
+            <th><span data-i18n="zh">承诺</span><span data-i18n="en">Guarantee</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {contractRows.map((r) => (
+            <tr>
+              <td><Bi tag="span" zh={r.zh} en={r.en} /></td>
+              <td><Bi tag="span" zh={r.dzh} en={r.den} /></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">05 / Evidence</span>
+        <Bi tag="h2" zh="搜索结果没有想象中独立" en="The search result is less independent than it looks" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="三轮 GP 的头部因子反复回到同一个主题：分钟成交额波动，做多成交额低而稳的股票。前 50 名里有 42–47 个含 Amt。把低流动性、低波动、低价三个风格逐日回归掉以后，部分头部因子的测试段夏普大幅缩小，例如 gp_long_1 第 1 名从 +1.69 降到 +0.08（未平滑）。"
+          en="Three GP rounds keep returning to the same theme: minute turnover volatility, long low-and-stable-turnover stocks. Between 42 and 47 of each top 50 contain Amt. After regressing out low liquidity, low volatility and low price day by day, several heads shrink sharply; for example gp_long_1's top factor falls from +1.69 to +0.08 unsmoothed."
+        />
+        <Bi
+          zh="这正是项目保留负结果的原因：搜索规模、算子数量与样本外可交易性是三件事。一个能写出 242 个算子的引擎，只有在因子不只是一个风格暴露时才算真正增加了 alpha。"
+          en="This is why negative results stay: search scale, operator count and out-of-sample tradability are three different things. An engine with 242 operators adds alpha only when its factors are more than a repackaged style exposure."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">06 / Implementation</span>
+        <Bi tag="h2" zh="引擎与工程细节" en="Engine and engineering details" />
+      </div>
+      <div class="features">
+        <div class="feature">
+          <span class="n">01</span>
+          <Bi tag="h3" zh="叶子只读一次" en="Read each leaf once" />
+          <Bi
+            tag="p"
+            zh="块内每个操作数只物化一次，按引用计数释放；同一批 129 棵树从 17.3 秒降到 5.6 秒，叶子读取占比从 67% 降到 5%，输出逐 bit 不变。"
+            en="Each operand is materialised once per chunk and released by reference count. The same 129 trees drop from 17.3 s to 5.6 s; leaf reads fall from 67% to 5% of runtime with bit-identical output."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">02</span>
+          <Bi tag="h3" zh="延迟批量奖励" en="Delayed batch reward" />
+          <Bi
+            tag="p"
+            zh="RL 在 SEP 时返回待定奖励，攒批后一次引擎调用求出全部面板，再过覆盖率、去重与事务性插入。"
+            en="RL returns a pending reward at SEP, accumulates a batch and evaluates all panels in one engine call before coverage, deduplication and transactional insertion."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">03</span>
+          <Bi tag="h3" zh="断点续算" en="Resumable calculation" />
+          <Bi
+            tag="p"
+            zh="生产计算按表达式摘要跳过已完成因子，重启结果与一次跑完逐 bit 相同；Parquet 导出带 manifest。"
+            en="Production calculation skips completed factors by expression digest; a restart is bit-identical to one uninterrupted run, and Parquet export carries a manifest."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">04</span>
+          <Bi tag="h3" zh="稳定排序" en="Stable sorting" />
+          <Bi
+            tag="p"
+            zh="对 vendored 核函数库唯一一处自觉修改：七处排序加 stable=True。真实分钟数据并列极多，非稳定排序会制造 1/n 级差异与凭空的换手。"
+            en="The one deliberate change to the vendored kernels: stable=True in seven sorts. Real minute data has many ties, and unstable ordering creates 1/n-scale differences and artificial turnover."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">07 / Limitations</span>
+        <Bi tag="h2" zh="局限与下一步" en="Limitations and next steps" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <Bi
+              tag="span"
+              zh="早期因子库是在全样本上挖出来的，因子在被留下时已经看过 2023-08 以后的测试段；干净样本外需要把挖掘的 --end 也设在切分点之前。"
+              en="The early factor library was mined on the full sample, so factors had already seen the post-2023-08 test segment when retained. A clean out-of-sample result requires the mining --end to stop before the split."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="头部因子的主要收益来自低流动性风格；风格中性化后的多头 alpha 尚未系统跑完，不能把现有结果当作独立于风格的选股能力。"
+              en="The heads earn mostly from a low-liquidity style. A systematic style-neutral long-only study is not finished, so these results cannot be read as stock-selection alpha independent of style."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="GP 的运行间方差很大，单个种子的 +1.03 与 +1.47 不能当定论；目前只有一次时间切分，滚动验证仍未完成。"
+              en="GP varies materially between seeds; +1.03 and +1.47 from single seeds are not a settled difference. Only one time split exists; rolling validation is unfinished."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="已知 sliding_{top,bottom}_{sum,mean}_masked_p5 四个算子不满足分块不变性，已用 strict xfail 钉住；另有 8 个测试因可选依赖跳过。"
+              en="Four sliding masked operators are known to violate chunk invariance and are pinned with a strict xfail; eight tests are skipped for optional dependencies."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="100 万账户基本无法用 IM 对冲；中证 1000 期货贴水 5% / 10% 时，样本外对冲后夏普约 1.46 / 1.16，仍缺真实期货与成分股数据。"
+              en="A CNY 1m account cannot hedge cleanly with IM. With 5% / 10% CSI 1000 futures discount, the hedged out-of-sample Sharpe is about 1.46 / 1.16; real futures and constituent data are still missing."
+            />
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">08 / References</span>
+        <Bi tag="h2" zh="相关页面与材料" en="Related pages and materials" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <a href={diagramZh}><span data-i18n="zh">三维张量示意图（中文）</span><span data-i18n="en">3-D tensor diagram (Chinese)</span></a>
+            · <a href={diagramEn}><span data-i18n="zh">三维张量示意图（英文）</span><span data-i18n="en">3-D tensor diagram (English)</span></a>
+          </li>
+          <li>
+            <a href={p1}><span data-i18n="zh">平台页：中证 800 指数增强研究平台</span><span data-i18n="en">Platform: CSI 800 enhanced-index research platform</span></a>
+          </li>
+          <li>
+            <a href={p2}><span data-i18n="zh">相关专题：动态多专家 Alpha 融合与路由</span><span data-i18n="en">Related: dynamic multi-expert alpha blending</span></a>
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="数据来源：AlphaCube 设计文档、精度契约测试与 100 万元纯多头回测结果（不公开，可当面演示复算）。"
+              en="Data source: AlphaCube design notes, precision-contract tests and the CNY 1m long-only backtest (not public; recomputation can be demonstrated in person)."
+            />
+          </li>
+        </ul>
+      </div>
+      <div class="pager">
+        <a href={base}>
+          <span data-i18n="zh">← 返回首页</span>
+          <span data-i18n="en">← BACK TO HOME</span>
+        </a>
+        <a href={p1}>
+          <span data-i18n="zh">回到主线：中证 800 研究平台 →</span>
+          <span data-i18n="en">BACK TO THE MAIN LINE: CSI 800 PLATFORM →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>

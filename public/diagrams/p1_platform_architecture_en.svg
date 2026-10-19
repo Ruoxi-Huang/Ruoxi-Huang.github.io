@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" font-family="Geist,'Inter',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="p1a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a1a1a1"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="700" fill="#ffffff"/>
+  <text x="60" y="55" font-size="30" font-weight="600" letter-spacing="-1.1" fill="#171717">CSI 800 enhanced-index research platform</text>
+  <text x="60" y="86" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="13" letter-spacing="0.5" fill="#767676">YAML-DRIVEN EXPERIMENTS · ONE CLI (main.py) · STRUCTURED LOGS · 400+ AUTOMATED TESTS</text>
+  <rect x="60" y="104" width="1080" height="2" fill="#171717"/>
+
+  <rect x="60" y="142" width="300" height="120" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="82" y="180" font-size="17" font-weight="600" fill="#171717">Data access</text>
+  <text x="82" y="208" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">PostgreSQL full / incremental</text>
+  <text x="82" y="232" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">local Feather snapshots</text>
+
+  <rect x="420" y="142" width="300" height="120" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="442" y="180" font-size="17" font-weight="600" fill="#171717">Factor engineering</text>
+  <text x="442" y="208" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">89 standardised alpha factors</text>
+  <text x="442" y="232" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">89 raw risk factors</text>
+
+  <rect x="780" y="142" width="300" height="120" rx="8" fill="#ffffff" stroke="#171717" stroke-width="2"/>
+  <text x="802" y="180" font-size="17" font-weight="600" fill="#171717">Alpha modelling</text>
+  <text x="802" y="208" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">Linear IC anchor + XGB residual</text>
+  <text x="802" y="232" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">40-day GRU temporal signal</text>
+
+  <rect x="60" y="352" width="300" height="120" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="82" y="390" font-size="17" font-weight="600" fill="#171717">Risk model</text>
+  <text x="82" y="418" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">cap-weighted WLS factor returns</text>
+  <text x="82" y="442" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">EW / NW · ERA · VRA</text>
+
+  <rect x="420" y="352" width="300" height="120" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="442" y="390" font-size="17" font-weight="600" fill="#171717">Portfolio construction</text>
+  <text x="442" y="418" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">Clarabel continuous SOCP</text>
+  <text x="442" y="442" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">Gurobi MIQCP (sparse book)</text>
+
+  <rect x="780" y="352" width="300" height="120" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="802" y="390" font-size="17" font-weight="600" fill="#171717">Backtest and evaluation</text>
+  <text x="802" y="418" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">daily · 5 bps one-way cost</text>
+  <text x="802" y="442" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="12" fill="#767676">TE / IR / drawdown / turnover</text>
+
+  <path d="M360 202 H414" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p1a)"/>
+  <path d="M720 202 H774" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p1a)"/>
+  <path d="M930 262 V306 H210 V346" stroke="#a1a1a1" stroke-width="1.5" fill="none" marker-end="url(#p1a)"/>
+  <path d="M360 412 H414" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p1a)"/>
+  <path d="M720 412 H774" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p1a)"/>
+  <path d="M930 472 V520" stroke="#a1a1a1" stroke-width="1.5" fill="none" marker-end="url(#p1a)"/>
+
+  <rect x="60" y="526" width="1080" height="116" rx="8" fill="#171717"/>
+  <text x="82" y="564" font-size="17" font-weight="600" fill="#ffffff">Auditable output contract</text>
+  <text x="82" y="592" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11.5" fill="#a1a1a1">outputs/YYYYMMDD/  target_weights · alpha · alpha_factor_weights · factor_covariance · specific_volatility · risk_diagnostics · summary</text>
+  <text x="82" y="616" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11.5" fill="#a1a1a1">outputs/backtest/  daily_returns · period_returns · metrics · diagnostics · te_calibration · PNG reports</text>
+</svg>

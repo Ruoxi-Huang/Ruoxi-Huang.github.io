@@ -29,6 +29,7 @@ const ledger = [
 const projects = [
   {
     n: "02",
+    slug: "p1-platform",
     zh: "中证 800 指数增强研究平台",
     en: "CSI 800 enhanced-index research platform",
     dzh: "覆盖数据接入、因子工程、Alpha 建模、风险分解、约束优化与日频回测的端到端系统；下列两个专题均在该平台内实现。",
@@ -36,6 +37,7 @@ const projects = [
   },
   {
     n: "03",
+    slug: "p3-barra-cne6",
     zh: "类 Barra CNE6 风险模型",
     en: "Barra CNE6-style risk model",
     dzh: "因子暴露生产 + 因子 / 个股协方差估计：Newey-West、特征值调整、VRA、贝叶斯收缩。",
@@ -43,6 +45,7 @@ const projects = [
   },
   {
     n: "04",
+    slug: "p4-alphacube",
     zh: "AlphaCube 三维张量因子挖掘",
     en: "AlphaCube tensor factor mining",
     dzh: "(股票, 交易日, 分钟) 立方体上的 GP 与四个 RL miner，含逐 bit 精度契约。",
@@ -50,6 +53,7 @@ const projects = [
   },
   {
     n: "05",
+    slug: "p5-database-backtest",
     zh: "只读数据库因子回测编排层",
     en: "Read-only database factor-backtest runner",
     dzh: "在只读 PostgreSQL / MySQL 上自动发现、审计并批量回测因子。",
@@ -202,7 +206,7 @@ const notes = [
     </div>
   </section>
 
-  <section class="band">
+  <section class="band" id="projects">
     <div class="wrap">
       <div class="section-head">
         <Bi tag="h2" zh="项目" en="Projects" />
@@ -224,11 +228,11 @@ const notes = [
         </a>
 
         {projects.map((p) => (
-          <div class="card pending">
-            <span class="index">{p.n} · <span data-i18n="zh">筹备中</span><span data-i18n="en">PLANNED</span></span>
+          <a class="card" href={`${base}projects/${p.slug}/`}>
+            <span class="index">{p.n} · <span data-i18n="zh">已发布</span><span data-i18n="en">PUBLISHED</span></span>
             <Bi tag="h3" zh={p.zh} en={p.en} />
             <Bi zh={p.dzh} en={p.den} />
-          </div>
+          </a>
         ))}
       </div>
     </div>

@@ -1,0 +1,374 @@
+---
+import Base from "../../layouts/Base.astro";
+import Bi from "../../components/Bi.astro";
+import Shot from "../../components/Shot.astro";
+
+const base = `${import.meta.env.BASE_URL.replace(/\/+$/, "")}/`;
+const diagramZh = `${base}diagrams/p5_database_factor_pipeline_zh.svg`;
+const diagramEn = `${base}diagrams/p5_database_factor_pipeline_en.svg`;
+const p1 = `${base}projects/p1-platform/`;
+const p2 = `${base}projects/p2-dynamic-blend/`;
+
+const exampleRows = [
+  { zh: "回测区间", en: "Evaluation window", v: "2025-01-16 → 2025-12-31" },
+  { zh: "收益观测期", en: "Return periods", v: "233" },
+  { zh: "RankIC 均值", en: "Mean RankIC", v: "-5.39%" },
+  { zh: "RankIC t 值 / p 值", en: "RankIC t / p", v: "-8.20 / 1.4e-14", hl: true },
+  { zh: "RankIC IR", en: "RankIC IR", v: "-0.527" },
+  { zh: "RankIC > 0 占比", en: "Share of RankIC > 0", v: "27.27%" },
+  { zh: "分组年化：G1 → G5", en: "Annualised groups: G1 → G5", v: "53.63% → 38.22%" },
+  { zh: "BMT 年化 / 夏普", en: "BMT annualised / Sharpe", v: "+4.62% / 0.83" },
+  { zh: "BMT 最大回撤", en: "BMT maximum drawdown", v: "3.74%" },
+  { zh: "年化换手", en: "Annualised turnover", v: "17.47×" },
+];
+
+const features = [
+  {
+    n: "01",
+    zh: "会话级凭据",
+    en: "Session-scoped credentials",
+    dzh: "密码只通过本机遮罩窗口输入，保存在回环辅助进程内存中，默认空闲 4 小时失效；配置文件只放 profile，不放密码。",
+    den: "Passwords enter through a local masked dialog and live only in a loopback helper's RAM, expiring after four idle hours. Config files hold profiles, never secrets.",
+  },
+  {
+    n: "02",
+    zh: "运行时只读",
+    en: "Read-only at runtime",
+    dzh: "PostgreSQL 用 SET TRANSACTION READ ONLY，MySQL 用 START TRANSACTION READ ONLY，结束后 ROLLBACK；CLI 不提供任意 SQL，也不探测写权限。",
+    den: "PostgreSQL opens SET TRANSACTION READ ONLY, MySQL opens START TRANSACTION READ ONLY, and both roll back. The CLI exposes no arbitrary SQL and never probes write access.",
+  },
+  {
+    n: "03",
+    zh: "结构发现",
+    en: "Structural discovery",
+    dzh: "扫描 schema，识别一列一因子、factor_name / factor_value 键值表、日期 × 股票宽表与 _YYYY 年度分区，并给同名因子的来源加表名前缀。",
+    den: "The schema scan identifies one-column factors, factor_name / factor_value key-value tables, date × stock wide tables and _YYYY partitions, prefixing duplicate logical names by table.",
+  },
+  {
+    n: "04",
+    zh: "先审计，再回测",
+    en: "Audit before backtest",
+    dzh: "检查日期范围、重复 (date, stock) 键、股票代码规范、因子 / 收益交集与空值；发现结构可映射不等于数据可用。",
+    den: "It checks date coverage, duplicate (date, stock) keys, identifier normalisation, factor/return overlap and missingness. Structural mappability is not the same as usable data.",
+  },
+  {
+    n: "05",
+    zh: "批量可恢复",
+    en: "Resumable batches",
+    dzh: "收益在一个批次里只读一次；单因子失败不删除其他结果；batch_manifest.json 记录映射、状态、错误与耗时，--skip-existing 跳过已完成项。",
+    den: "Returns load once per batch. A failed factor leaves the others intact. batch_manifest.json records mapping, status, errors and timings; --skip-existing skips completed outputs.",
+  },
+  {
+    n: "06",
+    zh: "数值框架不改写",
+    en: "Numerical framework untouched",
+    dzh: "编排层只做输入适配；排名、收益、换手、统计与绘图仍由 GeneratedFactorTest 完成，数据库路径不会复制一套算法。",
+    den: "The orchestration layer only adapts inputs. Ranking, returns, turnover, statistics and plotting remain in GeneratedFactorTest; the database path does not fork the algorithm.",
+  },
+];
+---
+
+<Base
+  title="只读数据库因子回测编排层 · Quant Research Portfolio"
+  description="在只读 PostgreSQL / MySQL 上自动发现、审计并批量回测因子，复用原始单因子框架的可被 Agent 调用的编排层"
+>
+  <section class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <p class="eyebrow">
+        <span data-i18n="zh">项目 05 · 工程工具</span>
+        <span data-i18n="en">Project 05 · Research tooling</span>
+      </p>
+      <div class="hero-narrow">
+        <Bi
+          tag="h1"
+          zh="只读数据库因子回测编排层"
+          en="Read-only database factor-backtest runner"
+        />
+        <Bi
+          tag="p"
+          class="lede"
+          zh="把「研究员手工跑因子」变成可被 Agent 编排的工程流程：在只读 PostgreSQL / MySQL 上自动发现表与因子、解析 schema、审计数据边界，再调用原始单因子框架完成单因子或全因子批量回测。"
+          en="Manual factor runs become an agent-callable workflow: discover tables and factors on read-only PostgreSQL or MySQL, resolve the schema, audit the data boundary, then call the original single-factor framework for one factor or a full batch."
+        />
+      </div>
+      <ul class="pills">
+        <li class="pill">Python</li>
+        <li class="pill">PostgreSQL</li>
+        <li class="pill">MySQL</li>
+        <li class="pill">Codex Skill</li>
+        <li class="pill">Read-only transactions</li>
+        <li class="pill">Resumable batches</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band band-soft band-sm">
+    <div class="wrap">
+      <div class="metrics">
+        <div class="metric featured">
+          <div class="v">2</div>
+          <Bi tag="div" class="k" zh="支持的数据库引擎" en="Database engines supported" />
+        </div>
+        <div class="metric">
+          <div class="v">233</div>
+          <Bi tag="div" class="k" zh="示例回测收益期" en="Return periods in the example" />
+        </div>
+        <div class="metric">
+          <div class="v">4</div>
+          <Bi tag="div" class="k" zh="单因子固定输出" en="Fixed outputs per factor" />
+        </div>
+        <div class="metric">
+          <div class="v">0</div>
+          <Bi tag="div" class="k" zh="失败时静默回退本地" en="Silent local fallbacks" />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">01 / Problem</span>
+        <Bi tag="h2" zh="因子回测的重复劳动与边界风险" en="Repeated work and boundary risk" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="同一套单因子检验在数据库上反复手写脚本：因子在哪张表、日期列叫什么、代码格式是否一致、键是否唯一、收益与因子有没有交集，每次都要重新确认。凭据容易进命令历史，批量任务中断后也很难知道哪些因子已经完成。"
+          en="The same single-factor test is rewritten by hand against a database: which table holds the factor, what the date column is called, whether identifiers align, whether keys are unique, and whether factor and returns overlap. Credentials leak into command history, and interrupted batches leave no clear record of what completed."
+        />
+        <Bi
+          zh="这个工具把这些问题收进一层确定性的编排：发现、映射、审计、回测、汇总各有明确输入输出；数据库失败直接失败，绝不悄悄换成过期的本地快照。"
+          en="This tool moves those questions into deterministic orchestration: discovery, mapping, audit, backtest and summary each have explicit inputs and outputs. A database failure fails the run; it never switches silently to a stale local snapshot."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">02 / Method</span>
+        <Bi tag="h2" zh="六条编排约束" en="Six orchestration constraints" />
+      </div>
+      <div class="features">
+        {features.map((f) => (
+          <div class="feature">
+            <span class="n">{f.n}</span>
+            <Bi tag="h3" zh={f.zh} en={f.en} />
+            <Bi tag="p" zh={f.dzh} en={f.den} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">03 / Architecture</span>
+        <Bi tag="h2" zh="从请求到框架的分层" en="From request to framework" />
+      </div>
+      <figure>
+        <img
+          src={diagramZh}
+          data-src-zh={diagramZh}
+          data-src-en={diagramEn}
+          alt="只读数据库因子回测编排层架构图"
+          data-alt-zh="只读数据库因子回测编排层架构图"
+          data-alt-en="Read-only database factor-backtest runner architecture"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="Agent 只负责理解任务与选择工作流；Skill 规定只读边界与审计顺序；适配器把异构 schema 规范成 trade_dt / stock_code / factor_value；原始框架负责所有数值与绘图。数据库与本地收入两条路径并不互为备份。"
+            en="The agent understands the task and selects the workflow; the Skill defines the read-only boundary and audit order; the adapter normalises heterogeneous schemas to trade_dt / stock_code / factor_value; the original framework owns all numbers and figures. The database and local-return paths are not backups for each other."
+          />
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">04 / Example</span>
+        <Bi tag="h2" zh="一个真实的数据库输出" en="One real database output" />
+      </div>
+      <div class="prose">
+        <Bi
+          zh="示例用 MySQL 因子库中的「短期反转_5_20」，收益从 PostgreSQL 实时读取。使用原始框架默认参数：5 个交易日调仓、五分组、信号滞后 2 个观察行、成本 0、TMB / BMT 双方向。因子方向事先未翻转，因此负 RankIC 是原始方向的读数。"
+          en="The example reads 短期反转_5_20 from the MySQL factor library and live returns from PostgreSQL. It uses the original framework defaults: a five-day rebalance, five groups, a two-row signal lag, zero cost and both TMB / BMT directions. The factor direction was not flipped, so the negative RankIC is the raw reading."
+        />
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th><span data-i18n="zh">指标</span><span data-i18n="en">Metric</span></th>
+            <th class="num"><span data-i18n="zh">数值</span><span data-i18n="en">Value</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          {exampleRows.map((r) => (
+            <tr>
+              <td><Bi tag="span" zh={r.zh} en={r.en} /></td>
+              <td class="num">{r.hl ? <span class="hl">{r.v}</span> : r.v}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <figure class="fig-half">
+        <Shot
+          name="p5_group_returns"
+          altZh="短期反转因子 2025 年五分组年化收益"
+          altEn="Annualised returns of the five short-reversal factor groups in 2025"
+        />
+        <figcaption>
+          <Bi
+            tag="span"
+            zh="G1 到 G5 按因子值从低到高排序，年化收益依次为 53.63%、46.10%、44.94%、42.91%、38.22%，分组单调。BMT 年化 +4.62%、夏普 0.83，但年化换手 17.47×，说明这个原始因子在扣成本前就要先面对可交易性问题。"
+            en="G1 to G5 sort from low to high factor value; annualised returns are 53.63%, 46.10%, 44.94%, 42.91% and 38.22%, monotone in the group order. BMT earns 4.62% a year at a 0.83 Sharpe, but annualised turnover is 17.47x, so tradability comes before any claim about net return."
+          />
+        </figcaption>
+      </figure>
+
+      <div class="callout dark">
+        <Bi
+          tag="span"
+          zh="这页展示的是编排层能否稳定产出一份可读的结果，而不是这个因子值得交易。单年样本、零成本、原始方向与 17.47× 年化换手同时存在，结论只能是「链路通了」，不能是「因子有效」。"
+          en="This page shows whether the runner can produce a readable result, not whether the factor is worth trading. A single year, zero cost, the raw direction and 17.47x annualised turnover coexist, so the conclusion is “the chain works”, not “the factor works”."
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">05 / Implementation</span>
+        <Bi tag="h2" zh="输出契约与恢复语义" en="Output contract and recovery semantics" />
+      </div>
+      <div class="features">
+        <div class="feature">
+          <span class="n">01</span>
+          <Bi tag="h3" zh="单因子输出" en="Single-factor output" />
+          <Bi
+            tag="p"
+            zh="factor_test_result.pkl、nav_picture.png、sub_overview.png、nav_overview.png 四个文件固定落盘。"
+            en="factor_test_result.pkl, nav_picture.png, sub_overview.png and nav_overview.png are always written."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">02</span>
+          <Bi tag="h3" zh="批量清单" en="Batch manifest" />
+          <Bi
+            tag="p"
+            zh="batch_manifest.json 记录数据库来源、日期窗口、发现结果、字段映射、框架参数、审计信息、每个因子的状态与耗时。"
+            en="batch_manifest.json records the database source, window, discovery result, field mapping, framework parameters, audit data, per-factor status and timing."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">03</span>
+          <Bi tag="h3" zh="单年窗口" en="One calendar year" />
+          <Bi
+            tag="p"
+            zh="全因子模式要求起止在同一自然年，确定性选择 _YYYY 分区，避免隐式跨年拼接或错误填充。"
+            en="All-factor mode requires both dates in one calendar year, selecting the _YYYY partition deterministically and avoiding implicit joins or fills."
+          />
+        </div>
+        <div class="feature">
+          <span class="n">04</span>
+          <Bi tag="h3" zh="失败不污染" en="Failures stay local" />
+          <Bi
+            tag="p"
+            zh="单个因子失败只记录自身错误；收益数据损坏或数据库不可用时整次运行失败，不产生看似成功的局部结果。"
+            en="A failed factor records its own error. Corrupt returns or an unavailable database fail the run rather than producing a partially successful-looking result."
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band-soft">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">06 / Limitations</span>
+        <Bi tag="h2" zh="局限与使用边界" en="Limits and scope" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <Bi
+              tag="span"
+              zh="示例只有 2025 单年，且使用零成本与默认信号滞后；它不是该因子的完整证据，也不能外推到其他年份。"
+              en="The example covers 2025 only, at zero cost and the default signal lag. It is not complete evidence for the factor and does not generalise to other years."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="自动发现只证明结构可映射，不证明日期覆盖、唯一键、收益交集或数据可用；这些必须由逐因子审计确认。"
+              en="Discovery proves structural mappability only. Date coverage, unique keys, return overlap and usability require the per-factor audit."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="发布时间、修订历史、历史股票池与执行可行性仍未做 point-in-time 验证；在这些问题解决前，结果只能当作研究输入。"
+              en="Publication timing, revision history, historical universe membership and execution feasibility are not yet verified point in time. Until they are, results are research inputs only."
+            />
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="年化换手 17.47×、单年样本与原始方向都说明：不能从一次回测反推因子方向、成本、日期或预处理；这些选择必须在看结果前写下。"
+              en="Annualised turnover of 17.47x, a single year and the raw direction all say the same thing: do not infer direction, cost, dates or preprocessing from one backtest. Those choices must be written before looking."
+            />
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap">
+      <div class="section-head">
+        <span class="label">07 / References</span>
+        <Bi tag="h2" zh="相关页面与材料" en="Related pages and materials" />
+      </div>
+      <div class="prose">
+        <ul>
+          <li>
+            <a href={diagramZh}><span data-i18n="zh">编排层架构图（中文）</span><span data-i18n="en">Runner architecture (Chinese)</span></a>
+            · <a href={diagramEn}><span data-i18n="zh">编排层架构图（英文）</span><span data-i18n="en">Runner architecture (English)</span></a>
+          </li>
+          <li>
+            <a href={p1}><span data-i18n="zh">平台页：中证 800 指数增强研究平台</span><span data-i18n="en">Platform: CSI 800 enhanced-index research platform</span></a>
+          </li>
+          <li>
+            <a href={p2}><span data-i18n="zh">相关专题：动态多专家 Alpha 融合与路由</span><span data-i18n="en">Related: dynamic multi-expert alpha blending</span></a>
+          </li>
+          <li>
+            <Bi
+              tag="span"
+              zh="数据来源：只读 PostgreSQL / MySQL 的 2025 年单因子输出与批次清单（不公开；密码与连接信息不在本站出现）。"
+              en="Data source: the 2025 single-factor output and batch manifest from read-only PostgreSQL / MySQL (not public; no passwords or connection details appear on this site)."
+            />
+          </li>
+        </ul>
+      </div>
+      <div class="pager">
+        <a href={base}>
+          <span data-i18n="zh">← 返回首页</span>
+          <span data-i18n="en">← BACK TO HOME</span>
+        </a>
+        <a href={p1}>
+          <span data-i18n="zh">回到主线：中证 800 研究平台 →</span>
+          <span data-i18n="en">BACK TO THE MAIN LINE: CSI 800 PLATFORM →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>

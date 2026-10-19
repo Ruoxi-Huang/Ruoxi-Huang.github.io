@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" font-family="Geist,'Inter',Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="p5e" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a1a1a1"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="720" fill="#ffffff"/>
+  <text x="60" y="55" font-size="30" font-weight="600" letter-spacing="-1.1" fill="#171717">Read-only database factor-backtest runner</text>
+  <text x="60" y="86" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="13" letter-spacing="0.5" fill="#767676">AGENT → SKILL BOUNDARY → READ-ONLY DATABASE → DETERMINISTIC ADAPTER → ORIGINAL FRAMEWORK → OUTPUTS</text>
+  <rect x="60" y="104" width="1080" height="2" fill="#171717"/>
+
+  <rect x="60" y="142" width="160" height="132" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="76" y="174" font-size="14.5" font-weight="600" fill="#171717">Request</text>
+  <text x="76" y="202" font-size="11.5" fill="#4d4d4d">factor · dates</text>
+  <text x="76" y="224" font-size="11.5" fill="#4d4d4d">output directory</text>
+  <text x="76" y="246" font-size="11.5" fill="#767676">thread-scoped task</text>
+
+  <rect x="244" y="142" width="160" height="132" rx="8" fill="#ffffff" stroke="#171717" stroke-width="2"/>
+  <text x="260" y="174" font-size="14.5" font-weight="600" fill="#171717">Skill boundary</text>
+  <text x="260" y="202" font-size="11.5" fill="#4d4d4d">read-only contract</text>
+  <text x="260" y="224" font-size="11.5" fill="#4d4d4d">masked password</text>
+  <text x="260" y="246" font-size="11.5" fill="#767676">no arbitrary SQL</text>
+
+  <rect x="428" y="142" width="160" height="132" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="444" y="174" font-size="14.5" font-weight="600" fill="#171717">Read-only source</text>
+  <text x="444" y="202" font-size="11.5" fill="#4d4d4d">PostgreSQL factors</text>
+  <text x="444" y="224" font-size="11.5" fill="#4d4d4d">MySQL factor DB</text>
+  <text x="444" y="246" font-size="11.5" fill="#767676">live PG returns</text>
+
+  <rect x="612" y="142" width="160" height="132" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="628" y="174" font-size="14.5" font-weight="600" fill="#171717">Deterministic adapter</text>
+  <text x="628" y="202" font-size="11.5" fill="#4d4d4d">discover → map</text>
+  <text x="628" y="224" font-size="11.5" fill="#4d4d4d">boundary audit</text>
+  <text x="628" y="246" font-size="11.5" fill="#767676">one normalised long table</text>
+
+  <rect x="796" y="142" width="160" height="132" rx="8" fill="#ffffff" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="812" y="174" font-size="14.5" font-weight="600" fill="#171717">Original framework</text>
+  <text x="812" y="202" font-size="11.5" fill="#4d4d4d">GeneratedFactorTest</text>
+  <text x="812" y="224" font-size="11.5" fill="#4d4d4d">groups · RankIC</text>
+  <text x="812" y="246" font-size="11.5" fill="#767676">no numerical rewrite</text>
+
+  <rect x="980" y="142" width="160" height="132" rx="8" fill="#171717"/>
+  <text x="996" y="174" font-size="14.5" font-weight="600" fill="#ffffff">Outputs</text>
+  <text x="996" y="202" font-size="11.5" fill="#c9c9c9">PKL + 3 figures</text>
+  <text x="996" y="224" font-size="11.5" fill="#c9c9c9">batch manifest</text>
+  <text x="996" y="246" font-size="11.5" fill="#a1a1a1">resumable</text>
+
+  <path d="M220 208 H238" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p5e)"/>
+  <path d="M404 208 H422" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p5e)"/>
+  <path d="M588 208 H606" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p5e)"/>
+  <path d="M772 208 H790" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p5e)"/>
+  <path d="M956 208 H974" stroke="#a1a1a1" stroke-width="1.5" marker-end="url(#p5e)"/>
+
+  <rect x="60" y="318" width="1080" height="88" rx="8" fill="#fafafa" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="80" y="350" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11" letter-spacing="1" fill="#767676">SINGLE FACTOR</text>
+  <text x="80" y="378" font-size="13.5" fill="#4d4d4d">Find the table → select the unique yearly partition → resolve date / stock / value → audit → backtest</text>
+  <text x="80" y="398" font-size="11.5" fill="#767676">Factor and live returns load once; the audited in-memory frame is reused by the numerical run</text>
+
+  <rect x="60" y="424" width="1080" height="88" rx="8" fill="#fafafa" stroke="#ebebeb" stroke-width="1.5"/>
+  <text x="80" y="456" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11" letter-spacing="1" fill="#767676">ALL FACTORS</text>
+  <text x="80" y="484" font-size="13.5" fill="#4d4d4d">Scan the schema → expand multi-column / key-value / wide factors → read returns once → audit and test each</text>
+  <text x="80" y="504" font-size="11.5" fill="#767676">A failed factor does not discard the others; batch_manifest.json records status, mapping and timings</text>
+
+  <rect x="60" y="540" width="1080" height="146" rx="8" fill="#171717"/>
+  <text x="80" y="576" font-size="16" font-weight="600" fill="#ffffff">The boundary is a runtime constraint, not a prompt</text>
+  <text x="80" y="604" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11.5" fill="#c9c9c9">SERVER-SIDE SELECT-ONLY · SET TRANSACTION READ ONLY · ROLLBACK · NO ARBITRARY SQL · NO WRITE PROBES</text>
+  <text x="80" y="628" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11.5" fill="#c9c9c9">NO SILENT FALLBACK TO LOCAL RETURNS · ONE CALENDAR YEAR PER BATCH · --skip-existing RESUMES</text>
+  <text x="80" y="656" font-family="'DejaVu Sans Mono',Consolas,monospace" font-size="11.5" fill="#a1a1a1">PASSWORDS STAY IN A LOOPBACK HELPER'S RAM; CONFIG FILES HOLD PROFILE NAMES, NEVER SECRETS</text>
+</svg>
