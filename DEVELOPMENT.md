@@ -1,5 +1,9 @@
 # 作品集站点开发与部署
 
+> 站点仓库：`Ruoxi-Huang/Ruoxi-Huang.github.io`  
+> 线上地址：<https://ruoxi-huang.github.io/>  
+> 个人主页 README：`Ruoxi-Huang/Ruoxi-Huang`
+
 用 Astro 构建的静态站点，部署到 GitHub Pages。五个项目页均已上线：中证 800
 指数增强研究平台、动态多专家 Alpha 融合与路由、类 Barra CNE6 风险模型、
 AlphaCube 三维张量因子挖掘、只读数据库因子回测编排层。
